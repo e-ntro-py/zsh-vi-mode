@@ -99,9 +99,10 @@ smile suddenly appeared on your face like regaining a good life.
 - ❇️  Undo, Redo, Cut, Copy, Paste, and Delete.
 - 🪐 Better surrounds functionality (Add, Replace, Delete, Move Around, and Highlight).
 - 🧽 Switch keywords (Increase/Decrease Number, Boolean, Weekday, Month, etc.).
-- ⚙️  Better functionality in command mode (**In progress**).
-- 🪀 Repeating command such as `10p` and `4fa` (**In progress**).
-- 📒 System clipboard (**In progress**).
+- ⚙️  Open under cursor URL or file path with charming `gx`.
+- 🖋️ Edit current command line in an external editor with `vv`.
+- 🪀 Repeating command such as `10p` and `4fa`.
+- 📒 System clipboard integration (Copy/Paste).
 
 ## 💼 Requirements
 
@@ -472,6 +473,121 @@ For example:
 - `||` => `&&`
 - `or` => `and`
 - ...
+
+System Clipboard
+--------
+
+zsh-vi-mode can integrate with your system clipboard. This feature is disabled by default.
+
+Enable:
+
+```zsh
+ZVM_SYSTEM_CLIPBOARD_ENABLED=true
+```
+
+Auto-detection:
+
+- macOS: pbcopy/pbpaste
+- Wayland: wl-copy / wl-paste -n
+- X11: xclip or xsel
+
+Override commands:
+
+```zsh
+ZVM_CLIPBOARD_COPY_CMD='xclip -selection clipboard'
+ZVM_CLIPBOARD_PASTE_CMD='xclip -selection clipboard -o'
+```
+
+Keybindings:
+
+- Normal: `gp` paste clipboard after cursor, `gP` before cursor
+- Visual: `gp`/`gP` replace selection with clipboard
+
+Note: `p`/`P` keep using ZLE's CUTBUFFER; `gp`/`gP` use the system clipboard.
+
+Behavior:
+
+- When enabled, yanks/deletes/changes that set CUTBUFFER also copy to the system clipboard.
+
+WSL (Windows Subsystem for Linux):
+
+```zsh
+# Using Windows clipboard
+ZVM_SYSTEM_CLIPBOARD_ENABLED=true
+ZVM_CLIPBOARD_COPY_CMD='clip.exe'
+ZVM_CLIPBOARD_PASTE_CMD='powershell.exe -NoProfile -Command Get-Clipboard'
+```
+
+or using win32yank:
+
+```zsh
+ZVM_CLIPBOARD_COPY_CMD='win32yank.exe -i --crlf'
+ZVM_CLIPBOARD_PASTE_CMD='win32yank.exe -o --lf'
+```
+
+Open Under Cursor
+----------------
+
+In `Normal mode`, you can use `gx` to open the URL or file path under the cursor.
+
+- If the word under the cursor is a URL (starting with `http://`, `https://`, `ftp://`, `file://`), it will open in your default web browser.
+- If the word under the cursor is a valid file or directory path, it will open with your system's default application for that file type.
+
+The plugin automatically detects whether the text under the cursor is a URL or a file path and opens it accordingly using your system's default opener:
+
+- **macOS**: `open`
+- **Linux**: `xdg-open`
+- **Windows**: `start` (Command Prompt) or `powershell.exe` (PowerShell)
+
+You can override the default open command by setting the `ZVM_OPEN_CMD` option.
+Also, you can set the `ZVM_OPEN_URL_CMD` and `ZVM_OPEN_FILE_CMD` options to
+specify different commands for opening URLs and files respectively.
+
+Overriding commands example:
+
+```zsh
+# Override the default open command
+ZVM_OPEN_CMD='xdg-open'
+
+# Override the open command for URLs
+ZVM_OPEN_URL_CMD='firefox'
+
+# Override the open command for URLs on macOS
+ZVM_OPEN_URL_CMD='open -a "Safari"'
+
+# Override the open command for files
+ZVM_OPEN_FILE_CMD='code'  # Open files with Visual Studio Code
+
+# Override the open command for files on macOS
+ZVM_OPEN_FILE_CMD='open -a "Visual Studio Code"'
+
+# Override the open command for files on Windows
+ZVM_OPEN_FILE_CMD='powershell.exe -Command "Start-Process code"'
+
+# Override the open command for files on Windows using cmd
+ZVM_OPEN_FILE_CMD='start code'
+```
+
+For Windows users, you can set the `open` command as a alias as below:
+
+```zsh
+# Add a open alias to your .zshrc for Windows users
+open='cmd.exe /C start'
+```
+
+Or more complex commands by creating a script, for example, create a script
+`/usr/local/bin/xdg-open` for opening URL on Windows:
+
+```sh
+#!/bin/sh
+powershell.exe -c start "'\$@'"
+```
+
+Then set the `ZVM_OPEN_CMD` option:
+
+```zsh
+ZVM_OPEN_CMD='/usr/local/bin/xdg-open'
+```
 
 Custom Escape Key
 --------
